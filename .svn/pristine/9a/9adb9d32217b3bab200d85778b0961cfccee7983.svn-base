@@ -1,0 +1,39 @@
+﻿using RAP.Research;
+using System;
+using System.Collections.Generic;
+using RAP.Database;
+
+namespace RAP.Control
+{
+    class ResearcherController
+    {
+        public static List<Researcher> Researchers { get;  set; }
+        public static Researcher CurrentResearcher { get;  set; }
+
+        //get basic details of researchers, such as: family name, given name, email etc.
+        public static List<Researcher> LoadResearchers()
+        {
+            Researchers = ERDAdapter.fetchBasicReseacrherDetails();
+            return Researchers;
+        }
+
+        //define methods that can implement filter search
+        // 1. search by level
+        public static void FilterBy(string level)
+        {
+            
+        }
+
+        // 2. search by name
+        public static void FilterByName(String name)
+        {
+            
+        }
+
+        //show details results of researchers
+        public static void LoadResearcherDetails()
+        {
+
+        }
+    }
+}

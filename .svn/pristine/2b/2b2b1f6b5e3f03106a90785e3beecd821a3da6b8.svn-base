@@ -1,0 +1,47 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using RAP.Database;
+
+namespace RAP.Research
+{
+    //present different school location
+    public enum Campus { Hobart, Launceston, CradleCoast};
+
+    class Researcher
+    {
+        //some basic main attributes for researchers
+        public int id { get; set; }
+        public string Type { get; set; }
+        public string Title { get; set; }
+        public string GivenName { get; set; }
+        public string FamilyName { get; set; }
+        public EmploymentLevel currentJob { get; set; }
+        public Campus Campus { get; set; }
+        public string School { get; set; }
+        public string Email { get; set; }
+        public string PhotoURL { get; set; }
+        public string Supervisor { get; set; }
+
+        public string Degree { get; set; }
+
+        public List<Position> Positions { get; set; }
+        public List<string> Supervises { get; set; }
+        private double ExpectedPublications { get; }
+
+        //methods
+        public Position GetCurrentJob { get; set; }
+        public Position GetEarliestJob { get; set; }
+        public DateTime CurrentJobStart { get; set; }
+        public DateTime EarliestStart { get; set; }
+        public int PublicationsCount { get; set; }
+        public double ThreeYearAverage { get; }
+        public double Performance { get { return ThreeYearAverage / ExpectedPublications; } }
+
+
+        public string CurrentJobTitle { get { return EnumString.Description(currentJob); } }
+        public double Tenure { get { return DateTime.Today.Subtract(EarliestStart).TotalDays / 365.0; } }
+    }
+}

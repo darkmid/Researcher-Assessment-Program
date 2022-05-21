@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="RAP.PublicationListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RAP"
+             mc:Ignorable="d" 
+             d:DesignHeight="350" d:DesignWidth="450">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="83*"/>
+            <RowDefinition Height="267*"/>
+        </Grid.RowDefinitions>
+        <Label Content="Publication List:" HorizontalAlignment="Left" VerticalAlignment="Top" Width="450" Height="38" FontSize="20" FontWeight="Bold"/>
+        <Label Content="From" HorizontalAlignment="Left" Margin="0,38,0,9.857" Width="108" FontSize="16"/>
+        <ComboBox Margin="113,38,0,11.857" Width="86" HorizontalAlignment="Left"/>
+        <Label Content="To" HorizontalAlignment="Left" Margin="204,38,0,11.857" Width="98" FontSize="16"/>
+        <ComboBox HorizontalAlignment="Left" Margin="302,36,0,11.857" Width="91"/>
+
+        <!-- ResearcherList -->
+        <ListBox x:Name="ResearcherList" Margin="0,0.143,0.286,-0.286" Grid.Row="1"/>
+        <Button Content="Yes" HorizontalAlignment="Left" Margin="398,43,0,11.857" Width="42"/>
+
+    </Grid>
+</UserControl>

@@ -1,0 +1,296 @@
+﻿using System;
+using System.Collections.Generic;
+using MySql.Data.MySqlClient;
+using RAP.Research;
+using RAP.View;
+
+namespace RAP.Database
+{
+    class ERDAdapter
+    {
+        //create connection to remote database
+        private static MySqlConnection connection = null;
+
+        //set login information for database connection
+        private const string data = "kit206";
+        private const string user = "kit206";
+        private const string pass = "kit206";
+        private const string serv = "alacritas.cis.utas.edu.au";
+
+        //return database connection (database does not open now)
+        private static MySqlConnection GetConnection()
+        {
+            if (connection == null)
+            {
+                string connectionDetails = String.Format
+                    ("Database={0}; Data Source={1}; User Id={2}; Password={3}",data,serv,user,pass);
+                connection = new MySqlConnection(connectionDetails);
+            }
+
+            return connection;
+        }
+
+        /// <summary>
+        /// get basic results of researchers from database
+        /// </summary>
+        public static List<Researcher> fetchBasicReseacrherDetails()
+        {
+            List<Researcher> researchers = new List<Researcher>();
+            MySqlConnection connection = GetConnection();
+
+            //use MySqlReader to "read" database entries
+            MySqlDataReader reader = null;
+
+            try
+            {
+                connection.Open();
+
+                MySqlCommand command = new MySqlCommand
+                    ("select type, id, title, given_name, family_name, level from researcher", connection);
+                reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    if(reader.GetString(0) == "Student")
+                    {
+                        researchers.Add(new Researcher
+                        {
+                            id = reader.GetInt32(1),
+                            Title = reader.GetString(2),
+                            GivenName = reader.GetString(3),
+                            FamilyName = reader.GetString(4)
+                        });
+                    }
+                    else if (reader.GetString(0) == "Staff")
+                    {
+                        researchers.Add(new Researcher
+                        {
+                            id = reader.GetInt32(1),
+                            Title = reader.GetString(2),
+                            GivenName = reader.GetString(3),
+                            FamilyName = reader.GetString(4),
+                            currentJob = reader.GetString(5).ToEnum<EmploymentLevel>()
+                        });
+                    }
+                }
+            }
+            catch (MySqlException error)
+            {
+                Console.WriteLine("Error: " + error);
+            }
+            finally
+            {
+                //close connections
+                if (reader != null) { reader.Close(); }
+                if (connection != null) { connection.Close(); }
+            }
+
+            researchers.Sort((researcher_one, researcher_two) => researcher_one.FamilyName.CompareTo(researcher_two.FamilyName));
+            return researchers;
+        }
+
+
+
+        /// <summary>
+        /// get details of researchers from database
+        /// </summary>
+        public static Researcher fetchFullResearcherDetails(int id)
+        {
+            Researcher curResearcher = new Researcher();
+            MySqlConnection connection = GetConnection();
+            MySqlDataReader reader = null;
+
+            try
+            {
+                MySqlCommand command = new MySqlCommand
+                    ("select type, given_name, family_name, title, unit, campus, email, photo, degree, utas_start, current_start from researcher where id = '"+ id +"'", connection);
+                reader = command.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    curResearcher.Type = reader.GetString(0);
+                    curResearcher.GivenName = reader.GetString(1);
+                    curResearcher.FamilyName = reader.GetString(2);
+                    curResearcher.Title = reader.GetString(3);
+                    curResearcher.School = reader.GetString(4);
+                    curResearcher.Campus = reader.GetString(5).ToEnum<Campus>();
+                    curResearcher.Email = reader.GetString(6);
+                    curResearcher.PhotoURL = reader.GetString(7);
+                    curResearcher.Degree = reader.GetString(8);
+                    curResearcher.EarliestStart = reader.GetDateTime(9);
+                    curResearcher.CurrentJobStart = reader.GetDateTime(10);
+                }
+                
+            }
+            catch (MySqlException error)
+            {
+                Console.WriteLine("Error: " + error);
+            }
+            finally
+            {
+                if(reader != null) { reader.Close(); }
+                if(connection != null) { connection.Close(); }
+            }
+
+            return curResearcher ;
+        }
+
+        /// <summary>
+        /// get full details of researchers from database
+        /// </summary>
+        public static Researcher completeResearcherDetails(Researcher researcher)
+        {
+            MySqlConnection connection = GetConnection();
+            MySqlDataReader reader = null;
+            MySqlCommand command = null;
+
+            try
+            {
+                if (researcher.Type == "Student")
+                {
+                    command = new MySqlCommand("select supervisor_id from researcher");
+                    reader = command.ExecuteReader();
+
+                    string supervisor_id = reader.GetString(0);
+                    reader.Close();
+
+                    command = new MySqlCommand("select title, given_name, family_name from researcher where id = '" + supervisor_id + "'", connection);
+                    reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                    {
+                        researcher.Supervisor = string.Format("{0} {1} {2}", reader.GetString(0), reader.GetString(1), reader.GetString(2));
+                    }
+
+                }
+            }
+            catch (MySqlException error)
+            {
+                Console.WriteLine("Error: " + error);
+            }
+            finally
+            {
+                if(reader != null) { reader.Close(); }
+                if(connection != null) { reader.Close(); }
+            }
+            return researcher;
+        }
+
+        /// <summary>
+        /// get basic results of publication from database
+        /// </summary>
+        public static List<Publication> fetchBasicPublicationDetails (Researcher researcher)
+        {
+            List<Publication> Pubs = new List<Publication>();
+            MySqlConnection connection = GetConnection();
+            MySqlDataReader reader = null;
+
+            try
+            {
+                connection.Open();
+
+                MySqlCommand command = new MySqlCommand("select p.doi, p.year, p.title from  researcher_publication as rp, publication as p where rp.researcher_id='" + researcher.id + "' and rp.doi = p.doi", connection);
+                reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Pubs.Add(new Publication
+                    {
+                        Doi = reader.GetString(0),
+                        PublicationYear = reader.GetInt32(1),
+                        Title=reader.GetString(2)
+                    });
+                }
+            }
+            catch (MySqlException error)
+            {
+                Console.WriteLine("Error: " + error);
+            }
+            finally
+            {
+                if (reader != null){reader.Close();}
+                if (connection != null) { connection.Close();}
+            }
+
+            return Pubs;
+        }
+
+        /// <summary>
+        /// get full details of researchers from database
+        /// </summary>
+        public static Publication completePublicationDetails(Publication publication)
+        {
+            MySqlConnection connection = GetConnection();
+            MySqlDataReader reader = null;
+
+            try
+            {
+                connection.Open();
+
+                MySqlCommand command = new MySqlCommand("select authors, type, cite_as, available from publication where doi = '" + publication.Doi + "'");
+                reader = command.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    publication.Authors = reader.GetString(0);
+                    publication.Type = reader.GetString(1).ToEnum<OutputType>();
+                    publication.CiteAs = reader.GetString(2);
+                    publication.Available = reader.GetDateTime(3);
+                }
+            }
+            catch(MySqlException error)
+            {
+                Console.WriteLine("Error: " + error);
+            }
+            finally
+            {
+                if (reader != null) { reader.Close(); }
+                if (connection != null) { connection.Close(); }
+            }
+
+            return publication;
+        }
+
+        /// <summary>
+        /// count number of publications in the period of time
+        /// </summary>
+        public static int fetchPublicationCounts(DateTime from, DateTime to)
+        {
+            int counter = 0;
+
+            MySqlConnection connection = GetConnection();
+            MySqlDataReader reader = null;
+            List<Publication> pubs = new List<Publication>();
+
+            try
+            {
+                connection.Open();
+
+                MySqlCommand command = new MySqlCommand("select doi, title from publication where available between '" + from + "' and '" + to + "'", connection);
+                reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    pubs.Add(new Publication
+                    {
+                        Doi = reader.GetString(0),
+                        Title = reader.GetString(1)
+                    });
+                    counter++;
+                }
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("Error: " + error);
+            }
+            finally
+            {
+                if (reader != null) { reader.Close(); }
+                if (connection != null) { connection.Close(); }
+            }
+
+
+            return counter;
+        }
+    }
+}

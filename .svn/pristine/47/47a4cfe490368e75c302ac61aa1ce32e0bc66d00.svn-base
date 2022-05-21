@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using RAP.Research;
+
+namespace RAP.Control
+{
+    class PublicationsController
+    {
+        public static List<Publication> loadPublicationsFor(Researcher researcher)
+        {
+            return null;
+        }
+    }
+}
